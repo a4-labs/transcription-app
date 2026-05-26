@@ -62,6 +62,11 @@ document.addEventListener('DOMContentLoaded', () => {
         resultSection.classList.add('hidden');
     }
 
+    const progressContainer = document.getElementById('progress-container');
+    const progressBarFill = document.getElementById('progress-bar-fill');
+    const progressText = document.getElementById('progress-text');
+    const progressPercent = document.getElementById('progress-percent');
+
     // Handle transcription start
     transcribeBtn.addEventListener('click', async () => {
         if (!currentFile) return;
@@ -71,6 +76,8 @@ document.addEventListener('DOMContentLoaded', () => {
         btnText.textContent = 'Wysyłanie pliku...';
         loader.classList.remove('hidden');
         resultSection.classList.add('hidden');
+        progressContainer.classList.remove('hidden');
+        updateProgress(0, 'Przygotowywanie...', '0%');
         hideError();
 
         const formData = new FormData();
@@ -91,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
 
             if (data.success && data.task_id) {
-                btnText.textContent = 'Przetwarzanie (to może potrwać)...';
+                btnText.textContent = 'Przetwarzanie w toku...';
                 pollStatus(data.task_id);
             } else {
                 throw new Error(data.error || 'Wystąpił błąd podczas odbierania zadania.');
@@ -101,6 +108,12 @@ document.addEventListener('DOMContentLoaded', () => {
             resetUI();
         }
     });
+
+    function updateProgress(percent, text, percentText) {
+        progressBarFill.style.width = `${percent}%`;
+        progressText.textContent = text;
+        progressPercent.textContent = percentText;
+    }
 
     // Poll status from server
     async function pollStatus(taskId) {
@@ -113,14 +126,22 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (data.status === 'completed') {
+                updateProgress(100, 'Zakończono!', '100%');
                 resultContent.textContent = data.text;
                 resultSection.classList.remove('hidden');
-                resetUI();
+                setTimeout(() => {
+                    progressContainer.classList.add('hidden');
+                    resetUI();
+                }, 1000);
             } else if (data.status === 'error') {
                 throw new Error(data.error || 'Wystąpił błąd podczas analizy dźwięku na serwerze.');
             } else {
                 // status 'pending' or 'processing'
-                setTimeout(() => pollStatus(taskId), 3000);
+                if (data.status === 'processing') {
+                    const prog = data.progress || 0;
+                    updateProgress(prog, 'Analizowanie mowy...', `${prog}%`);
+                }
+                setTimeout(() => pollStatus(taskId), 2000);
             }
         } catch (error) {
             showError(error.message);
@@ -132,6 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
         transcribeBtn.disabled = false;
         btnText.textContent = 'Transkrybuj';
         loader.classList.add('hidden');
+        // keep progress container hidden if reset is full
     }
 
     // Copy to clipboard functionality

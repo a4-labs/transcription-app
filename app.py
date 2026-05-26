@@ -39,11 +39,19 @@ async def read_index():
     with open("static/index.html", "r", encoding="utf-8") as f:
         return f.read()
 
-def run_transcription_sync(model, audio_path, lang):
-    """Synchronous function to run CPU-bound transcription."""
+def run_transcription_sync(model, audio_path, lang, task_id):
+    """Synchronous function to run CPU-bound transcription and update progress."""
     segments, info = model.transcribe(audio_path, language=lang, beam_size=5)
-    # The generator 'segments' actually runs the inference when iterated
-    text = "".join(segment.text + " " for segment in segments)
+    
+    text = ""
+    for segment in segments:
+        text += segment.text + " "
+        
+        # Calculate and update progress
+        if info.duration > 0:
+            progress = min(100, int((segment.end / info.duration) * 100))
+            tasks[task_id]["progress"] = progress
+
     return text.strip(), info
 
 async def process_audio(task_id: str, temp_audio_path: str, language: str, model_size: str):
@@ -57,10 +65,11 @@ async def process_audio(task_id: str, temp_audio_path: str, language: str, model
         
         # Run the heavy CPU-bound generator entirely in a thread
         text_result, info = await asyncio.to_thread(
-            run_transcription_sync, model, temp_audio_path, language
+            run_transcription_sync, model, temp_audio_path, language, task_id
         )
 
         tasks[task_id]["status"] = "completed"
+        tasks[task_id]["progress"] = 100
         tasks[task_id]["text"] = text_result
         tasks[task_id]["language_detected"] = info.language
         tasks[task_id]["language_probability"] = info.language_probability
@@ -95,6 +104,7 @@ async def start_transcription(
     # Initialize task status
     tasks[task_id] = {
         "status": "pending",
+        "progress": 0,
         "text": None,
         "error": None
     }
@@ -116,6 +126,7 @@ async def get_status(task_id: str):
     return {
         "success": True,
         "status": task["status"],
+        "progress": task.get("progress", 0),
         "text": task.get("text"),
         "error": task.get("error")
     }
