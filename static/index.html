@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Szybka Transkrypcja Audio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="background-elements">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+
+    <main class="container">
+        <header>
+            <h1>Szybka <span>Transkrypcja</span></h1>
+            <p>Zamień swoje nagrania na tekst w mgnieniu oka.</p>
+        </header>
+
+        <section class="controls">
+            <div class="lang-selector">
+                <label for="language">Język nagrania:</label>
+                <select id="language" name="language">
+                    <option value="pl" selected>Polski</option>
+                    <option value="en">Angielski</option>
+                </select>
+            </div>
+        </section>
+
+        <section class="upload-zone" id="drop-zone">
+            <input type="file" id="file-input" accept="audio/*,.m4a,.ogg,.wav,.mp3" hidden>
+            <div class="upload-content">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="upload-icon"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                <p>Kliknij, aby wybrać plik audio<br>lub przeciągnij i upuść go tutaj</p>
+                <span class="file-name" id="file-name">Brak wybranego pliku</span>
+            </div>
+        </section>
+
+        <button id="transcribe-btn" class="primary-btn" disabled>
+            <span class="btn-text">Transkrybuj</span>
+            <span class="loader hidden"></span>
+        </button>
+
+        <section class="result-section hidden" id="result-section">
+            <div class="result-header">
+                <h2>Wynik transkrypcji</h2>
+                <button id="copy-btn" class="icon-btn" title="Kopiuj do schowka">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                </button>
+            </div>
+            <div class="result-content" id="result-content"></div>
+        </section>
+
+        <div id="error-message" class="error-message hidden"></div>
+    </main>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
