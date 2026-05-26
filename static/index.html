@@ -21,7 +21,17 @@
 
         <section class="controls">
             <div class="lang-selector">
-                <label for="language">Język nagrania:</label>
+                <label for="model-size">Model:</label>
+                <select id="model-size" name="model-size">
+                    <option value="tiny">Tiny (szybki, niska jakość)</option>
+                    <option value="base">Base</option>
+                    <option value="small">Small (dobry balans)</option>
+                    <option value="medium" selected>Medium (domyślny)</option>
+                    <option value="large-v3">Large-v3 (wymaga dużo RAM)</option>
+                </select>
+            </div>
+            <div class="lang-selector">
+                <label for="language">Język:</label>
                 <select id="language" name="language">
                     <option value="pl" selected>Polski</option>
                     <option value="en">Angielski</option>

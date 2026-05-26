@@ -75,6 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const formData = new FormData();
         formData.append('file', currentFile);
         formData.append('language', languageSelect.value);
+        formData.append('model_size', document.getElementById('model-size').value);
 
         try {
             const response = await fetch('/transcribe', {
