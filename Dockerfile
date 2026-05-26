@@ -9,6 +9,7 @@ WORKDIR /app
 # pkg-config and libav*-dev are required in case PyAV needs to compile from source
 RUN apt-get update && apt-get install -y \
     ffmpeg \
+    build-essential \
     pkg-config \
     libavformat-dev \
     libavcodec-dev \
