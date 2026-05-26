@@ -6,8 +6,17 @@ WORKDIR /app
 
 # Install system dependencies
 # ffmpeg is required by faster-whisper to process audio files
+# pkg-config and libav*-dev are required in case PyAV needs to compile from source
 RUN apt-get update && apt-get install -y \
     ffmpeg \
+    pkg-config \
+    libavformat-dev \
+    libavcodec-dev \
+    libavdevice-dev \
+    libavutil-dev \
+    libswscale-dev \
+    libswresample-dev \
+    libavfilter-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the requirements file into the container
