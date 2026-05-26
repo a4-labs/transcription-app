@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const errorMessage = document.getElementById('error-message');
     const copyBtn = document.getElementById('copy-btn');
     const languageSelect = document.getElementById('language');
+    const modelSelect = document.getElementById('model-size');
 
     let currentFile = null;
 
@@ -61,13 +62,13 @@ document.addEventListener('DOMContentLoaded', () => {
         resultSection.classList.add('hidden');
     }
 
-    // Handle transcription
+    // Handle transcription start
     transcribeBtn.addEventListener('click', async () => {
         if (!currentFile) return;
 
         // UI state: Loading
         transcribeBtn.disabled = true;
-        btnText.textContent = 'Przetwarzanie...';
+        btnText.textContent = 'Wysyłanie pliku...';
         loader.classList.remove('hidden');
         resultSection.classList.add('hidden');
         hideError();
@@ -75,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const formData = new FormData();
         formData.append('file', currentFile);
         formData.append('language', languageSelect.value);
-        formData.append('model_size', document.getElementById('model-size').value);
+        formData.append('model_size', modelSelect.value);
 
         try {
             const response = await fetch('/transcribe', {
@@ -89,21 +90,49 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const data = await response.json();
 
-            if (data.success) {
-                resultContent.textContent = data.text;
-                resultSection.classList.remove('hidden');
+            if (data.success && data.task_id) {
+                btnText.textContent = 'Przetwarzanie (to może potrwać)...';
+                pollStatus(data.task_id);
             } else {
-                throw new Error(data.error || 'Wystąpił nieznany błąd podczas transkrypcji.');
+                throw new Error(data.error || 'Wystąpił błąd podczas odbierania zadania.');
             }
         } catch (error) {
             showError(error.message);
-        } finally {
-            // UI state: Reset
-            transcribeBtn.disabled = false;
-            btnText.textContent = 'Transkrybuj';
-            loader.classList.add('hidden');
+            resetUI();
         }
     });
+
+    // Poll status from server
+    async function pollStatus(taskId) {
+        try {
+            const res = await fetch(`/status/${taskId}`);
+            const data = await res.json();
+            
+            if (!data.success) {
+                throw new Error(data.error || 'Nieznany błąd podczas pobierania statusu.');
+            }
+
+            if (data.status === 'completed') {
+                resultContent.textContent = data.text;
+                resultSection.classList.remove('hidden');
+                resetUI();
+            } else if (data.status === 'error') {
+                throw new Error(data.error || 'Wystąpił błąd podczas analizy dźwięku na serwerze.');
+            } else {
+                // status 'pending' or 'processing'
+                setTimeout(() => pollStatus(taskId), 3000);
+            }
+        } catch (error) {
+            showError(error.message);
+            resetUI();
+        }
+    }
+
+    function resetUI() {
+        transcribeBtn.disabled = false;
+        btnText.textContent = 'Transkrybuj';
+        loader.classList.add('hidden');
+    }
 
     // Copy to clipboard functionality
     copyBtn.addEventListener('click', async () => {
